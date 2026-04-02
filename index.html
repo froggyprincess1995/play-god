@@ -1,51 +1,520 @@
-<!DOCTYPE html>
+import React, { useMemo, useState } from "react";
+import { Globe, TrendingUp, Thermometer, CloudRain, Wind, Waves, Flame, AlertTriangle, Calendar, BarChart3, LineChart, Search, Filter, Info, ChevronRight, MapPin, Zap, ShieldAlert } from "lucide-react";
 
-<html>
-<head>
-  <title>Forecast Market</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+const hotspots = [
+  {
+    id: 1,
+    name: "North Atlantic",
+    category: "Hurricanes",
+    x: "33%",
+    y: "32%",
+    risk: 72,
+    markets: 14,
+    outlook: "Elevated cyclone activity",
+  },
+  {
+    id: 2,
+    name: "Mediterranean Basin",
+    category: "Heatwaves",
+    x: "54%",
+    y: "31%",
+    risk: 81,
+    markets: 18,
+    outlook: "Persistent heat and drought pressure",
+  },
+  {
+    id: 3,
+    name: "South Asia",
+    category: "Flooding",
+    x: "69%",
+    y: "43%",
+    risk: 77,
+    markets: 16,
+    outlook: "Monsoon-linked flood risk",
+  },
+  {
+    id: 4,
+    name: "Western US",
+    category: "Wildfire",
+    x: "17%",
+    y: "34%",
+    risk: 74,
+    markets: 12,
+    outlook: "Dry fuels and heat stress",
+  },
+  {
+    id: 5,
+    name: "East Africa",
+    category: "Drought",
+    x: "58%",
+    y: "56%",
+    risk: 68,
+    markets: 9,
+    outlook: "Rainfall variability remains high",
+  },
+  {
+    id: 6,
+    name: "Western Pacific",
+    category: "Typhoons",
+    x: "81%",
+    y: "38%",
+    risk: 79,
+    markets: 15,
+    outlook: "Storm track volatility increasing",
+  },
+];
 
-<body class="bg-black text-white">
+const disasterData = [
+  { rank: 1, event: "Major Flood Events", region: "Asia", impact: "$43B est.", severity: 92 },
+  { rank: 2, event: "Tropical Cyclones", region: "North Atlantic", impact: "$39B est.", severity: 89 },
+  { rank: 3, event: "Extreme Heat", region: "Europe", impact: "$31B est.", severity: 87 },
+  { rank: 4, event: "Wildfire Seasons", region: "North America", impact: "$25B est.", severity: 83 },
+  { rank: 5, event: "Drought Conditions", region: "Africa", impact: "$21B est.", severity: 80 },
+  { rank: 6, event: "Severe Storm Clusters", region: "US", impact: "$18B est.", severity: 77 },
+  { rank: 7, event: "Coastal Flooding", region: "South America", impact: "$14B est.", severity: 74 },
+  { rank: 8, event: "Landslide Events", region: "South Asia", impact: "$10B est.", severity: 69 },
+  { rank: 9, event: "Cold Snap Losses", region: "Europe", impact: "$8B est.", severity: 62 },
+  { rank: 10, event: "Dust and Wind Events", region: "Middle East", impact: "$6B est.", severity: 59 },
+];
 
-<div class="min-h-screen flex flex-col items-center justify-center text-center px-6">
+const climateSignals = [
+  {
+    title: "Warming trend",
+    icon: Thermometer,
+    body: "Longer heat seasons are widening the window for temperature and drought markets.",
+  },
+  {
+    title: "Storm volatility",
+    icon: Wind,
+    body: "Shifting wind and ocean patterns can change storm paths and pricing sentiment quickly.",
+  },
+  {
+    title: "Rainfall extremes",
+    icon: CloudRain,
+    body: "More uneven rainfall makes local flood and drought predictions more valuable.",
+  },
+  {
+    title: "Coastal pressure",
+    icon: Waves,
+    body: "Sea-level and surge concerns increase interest in coastal region forecasting markets.",
+  },
+];
 
-  <h1 class="text-5xl font-bold mb-6">
-    Trade the forecast, not the tragedy.
-  </h1>
+const yearlyPatterns = [
+  { year: "2021", heat: 48, rainfall: 55, wildfire: 44, storm: 52 },
+  { year: "2022", heat: 57, rainfall: 49, wildfire: 53, storm: 58 },
+  { year: "2023", heat: 66, rainfall: 61, wildfire: 59, storm: 62 },
+  { year: "2024", heat: 73, rainfall: 69, wildfire: 64, storm: 71 },
+  { year: "2025", heat: 79, rainfall: 72, wildfire: 68, storm: 76 },
+];
 
-  <p class="text-lg text-gray-300 max-w-xl mb-10">
-    A prediction market for weather — rain, heat, and climate outcomes.
-  </p>
+const starterMarkets = [
+  {
+    title: "Mediterranean Heatwave",
+    question: "Will Southern Europe record 20+ regional heatwave days before August 31?",
+    yes: 64,
+    no: 36,
+    horizon: "4 months",
+    type: "Temperature",
+  },
+  {
+    title: "South Asia Monsoon Flooding",
+    question: "Will rainfall exceed the severe flood threshold in at least 3 monitored basins this season?",
+    yes: 58,
+    no: 42,
+    horizon: "6 months",
+    type: "Flood",
+  },
+  {
+    title: "North Atlantic Cyclone Activity",
+    question: "Will the region finish above the upper storm activity band this year?",
+    yes: 51,
+    no: 49,
+    horizon: "12 months",
+    type: "Storm",
+  },
+];
 
-  <div class="grid gap-4 max-w-xl w-full">
+function MiniBars({ values }) {
+  return (
+    <div className="flex h-28 items-end gap-2">
+      {values.map((v, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-t-2xl bg-gradient-to-t from-cyan-500/40 to-indigo-300/80"
+          style={{ height: `${v}%` }}
+        />
+      ))}
+    </div>
+  );
+}
 
-```
-<div class="bg-white/10 p-6 rounded-xl">
-  <h2 class="text-xl font-semibold mb-2">
-    Will London get 20mm of rain this weekend?
-  </h2>
-  <div class="flex gap-4 mt-4">
-    <button class="bg-green-500 px-4 py-2 rounded">YES 43%</button>
-    <button class="bg-red-500 px-4 py-2 rounded">NO 57%</button>
-  </div>
-</div>
+function PatternRow({ label, value }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between text-sm text-slate-300">
+        <span>{label}</span>
+        <span>{value}%</span>
+      </div>
+      <div className="h-3 rounded-full bg-white/10">
+        <div className="h-3 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-400" style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
 
-<div class="bg-white/10 p-6 rounded-xl">
-  <h2 class="text-xl font-semibold mb-2">
-    Will NYC hit 32°C this week?
-  </h2>
-  <div class="flex gap-4 mt-4">
-    <button class="bg-green-500 px-4 py-2 rounded">YES 61%</button>
-    <button class="bg-red-500 px-4 py-2 rounded">NO 39%</button>
-  </div>
-</div>
-```
+export default function ForecastMarketLandingPage() {
+  const [selectedHotspot, setSelectedHotspot] = useState(hotspots[1]);
+  const [prediction, setPrediction] = useState("yes");
+  const [timeHorizon, setTimeHorizon] = useState("12 months");
+  const [stake, setStake] = useState(250);
 
-  </div>
+  const opposingOdds = useMemo(() => {
+    return prediction === "yes" ? { you: 62, crowd: 38 } : { you: 41, crowd: 59 };
+  }, [prediction]);
 
-</div>
+  return (
+    <div className="min-h-screen bg-slate-950 text-white">
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[-6rem] top-[-4rem] h-80 w-80 rounded-full bg-cyan-500/20 blur-3xl" />
+        <div className="absolute right-[-10rem] top-20 h-[28rem] w-[28rem] rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.1),transparent_30%),linear-gradient(to_bottom,rgba(15,23,42,0.92),rgba(2,6,23,1))]" />
+      </div>
 
-</body>
-</html>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
+              <Globe className="h-5 w-5 text-cyan-200" />
+            </div>
+            <div>
+              <div className="text-sm text-slate-300">EarthSignal Markets</div>
+              <div className="text-xs text-slate-500">Interactive climate and disaster forecasting platform</div>
+            </div>
+          </div>
+
+          <nav className="hidden items-center gap-7 text-sm text-slate-300 lg:flex">
+            <a href="#globe" className="hover:text-white">Globe</a>
+            <a href="#markets" className="hover:text-white">Markets</a>
+            <a href="#disasters" className="hover:text-white">Disasters</a>
+            <a href="#climate" className="hover:text-white">Climate Data</a>
+            <a href="#patterns" className="hover:text-white">Patterns</a>
+          </nav>
+
+          <div className="flex items-center gap-3">
+            <button className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white md:block">Sign in</button>
+            <button className="rounded-2xl bg-white px-4 py-2 text-sm font-medium text-slate-950">Launch app</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section className="mx-auto grid max-w-7xl gap-10 px-6 pb-10 pt-14 lg:grid-cols-[1.05fr_0.95fr] lg:px-8 lg:pt-20">
+          <div>
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
+              <ShieldAlert className="h-4 w-4" />
+              Forecast global risk with interactive regional markets
+            </div>
+            <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
+              A globe-first prediction market for weather, climate, and natural disaster risk.
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
+              Click a region, create a market up to a year ahead, and let the crowd take the other side. Pair live forecasting with deep context from historical disasters, climate signals, and multi-year pattern dashboards.
+            </p>
+
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <a href="#globe" className="rounded-2xl bg-cyan-400 px-6 py-3 text-center text-sm font-semibold text-slate-950">Explore the globe</a>
+              <a href="#disasters" className="rounded-2xl border border-white/10 bg-white/5 px-6 py-3 text-center text-sm font-semibold text-white">See data panels</a>
+            </div>
+
+            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              {[
+                ["1 year", "Forecast horizon"],
+                ["Global", "Clickable regions"],
+                ["Top 10", "Disaster and climate panels"],
+              ].map(([value, label]) => (
+                <div key={label} className="rounded-3xl border border-white/10 bg-white/5 p-5">
+                  <div className="text-2xl font-semibold">{value}</div>
+                  <div className="mt-1 text-sm text-slate-400">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5 shadow-2xl shadow-cyan-950/20 backdrop-blur-xl">
+            <div className="rounded-[1.5rem] border border-white/10 bg-slate-900/80 p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-slate-400">Live market preview</div>
+                  <div className="mt-1 text-xl font-semibold">{selectedHotspot.name}</div>
+                </div>
+                <div className="rounded-2xl bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300">
+                  Risk score {selectedHotspot.risk}
+                </div>
+              </div>
+              <div className="rounded-[1.5rem] border border-white/10 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-5">
+                <div className="mb-4 flex items-center justify-between text-sm text-slate-400">
+                  <span>{selectedHotspot.category} outlook</span>
+                  <span>{selectedHotspot.markets} live markets</span>
+                </div>
+                <MiniBars values={[25, 34, 39, 48, 51, 57, 66, 63, 72, 76, 82, 78]} />
+                <div className="mt-4 text-sm text-slate-300">{selectedHotspot.outlook}</div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button onClick={() => setPrediction("yes")} className={`rounded-3xl border p-4 text-left transition ${prediction === "yes" ? "border-cyan-300/40 bg-cyan-400/15" : "border-white/10 bg-white/5"}`}>
+                  <div className="text-xs text-slate-300">YOU PREDICT</div>
+                  <div className="mt-2 text-3xl font-semibold">YES</div>
+                  <div className="mt-1 text-xs text-slate-400">Probability {opposingOdds.you}%</div>
+                </button>
+                <button onClick={() => setPrediction("no")} className={`rounded-3xl border p-4 text-left transition ${prediction === "no" ? "border-rose-300/40 bg-rose-400/15" : "border-white/10 bg-white/5"}`}>
+                  <div className="text-xs text-slate-300">YOU PREDICT</div>
+                  <div className="mt-2 text-3xl font-semibold">NO</div>
+                  <div className="mt-1 text-xs text-slate-400">Probability {opposingOdds.you}%</div>
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm text-slate-300"><Calendar className="h-4 w-4" /> Forecast window</div>
+                  <select value={timeHorizon} onChange={(e) => setTimeHorizon(e.target.value)} className="w-full rounded-xl border border-white/10 bg-slate-950 px-3 py-2 text-sm outline-none">
+                    <option>1 month</option>
+                    <option>3 months</option>
+                    <option>6 months</option>
+                    <option>12 months</option>
+                  </select>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="mb-2 flex items-center gap-2 text-sm text-slate-300"><TrendingUp className="h-4 w-4" /> Your stake</div>
+                  <input type="range" min="25" max="1000" value={stake} onChange={(e) => setStake(Number(e.target.value))} className="w-full" />
+                  <div className="mt-2 text-sm text-slate-400">{stake} forecast credits</div>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+                Crowd takes the opposite side at <span className="font-semibold text-white">{opposingOdds.crowd}%</span> implied probability across the selected market.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="globe" className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+          <div className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Interactive globe</div>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Click a region and open a market</h2>
+            </div>
+            <div className="flex gap-3">
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300"><Search className="h-4 w-4" /> Search regions</div>
+              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300"><Filter className="h-4 w-4" /> Filter risks</div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5">
+              <div className="relative mx-auto aspect-square max-w-[44rem] overflow-hidden rounded-full border border-cyan-300/20 bg-[radial-gradient(circle_at_50%_45%,rgba(34,211,238,0.2),rgba(15,23,42,0.95)_58%,rgba(2,6,23,1)_78%)] shadow-[0_0_80px_rgba(34,211,238,0.12)]">
+                <div className="absolute inset-6 rounded-full border border-white/10" />
+                <div className="absolute inset-14 rounded-full border border-white/5" />
+                <div className="absolute left-[18%] top-[22%] h-20 w-28 rounded-[60%_40%_50%_50%] bg-emerald-400/20 blur-sm" />
+                <div className="absolute left-[46%] top-[24%] h-24 w-28 rounded-[40%_50%_60%_45%] bg-emerald-400/20 blur-sm" />
+                <div className="absolute left-[60%] top-[42%] h-28 w-36 rounded-[50%_45%_55%_40%] bg-emerald-400/15 blur-sm" />
+                <div className="absolute left-[24%] top-[46%] h-24 w-24 rounded-[55%_45%_45%_55%] bg-emerald-400/15 blur-sm" />
+                <div className="absolute left-[43%] top-[56%] h-20 w-24 rounded-[40%_55%_50%_45%] bg-emerald-400/15 blur-sm" />
+                {hotspots.map((spot) => (
+                  <button
+                    key={spot.id}
+                    onClick={() => setSelectedHotspot(spot)}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 rounded-full border px-3 py-2 text-left shadow-xl transition ${selectedHotspot.id === spot.id ? "border-cyan-200 bg-cyan-400/20 text-white" : "border-white/15 bg-slate-950/60 text-slate-200 hover:bg-white/10"}`}
+                    style={{ left: spot.x, top: spot.y }}
+                  >
+                    <div className="flex items-center gap-2 text-xs font-medium">
+                      <MapPin className="h-3 w-3" /> {spot.name}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm text-cyan-300">Selected region</div>
+                    <h3 className="mt-1 text-2xl font-semibold">{selectedHotspot.name}</h3>
+                  </div>
+                  <div className="rounded-2xl bg-white/10 px-3 py-2 text-sm text-slate-300">{selectedHotspot.category}</div>
+                </div>
+                <p className="mt-4 text-sm leading-7 text-slate-400">{selectedHotspot.outlook}. Users can create regional markets, choose a settlement date up to one year ahead, and challenge the crowd to take the opposite side.</p>
+                <div className="mt-5 grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl bg-slate-950/60 p-4">
+                    <div className="text-xs text-slate-500">Risk</div>
+                    <div className="mt-1 text-2xl font-semibold">{selectedHotspot.risk}</div>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 p-4">
+                    <div className="text-xs text-slate-500">Live markets</div>
+                    <div className="mt-1 text-2xl font-semibold">{selectedHotspot.markets}</div>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950/60 p-4">
+                    <div className="text-xs text-slate-500">Max horizon</div>
+                    <div className="mt-1 text-2xl font-semibold">12m</div>
+                  </div>
+                </div>
+                <button className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950">Create market <ChevronRight className="h-4 w-4" /></button>
+              </div>
+
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <div className="mb-4 flex items-center gap-2 text-sm text-slate-300"><Info className="h-4 w-4" /> Example market setup</div>
+                <div className="rounded-2xl border border-white/10 bg-slate-950/60 p-4">
+                  <div className="text-sm text-slate-400">Question</div>
+                  <div className="mt-2 text-lg font-medium text-white">Will {selectedHotspot.name} exceed its severe {selectedHotspot.category.toLowerCase()} threshold before the selected settlement date?</div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl bg-white/5 p-3 text-sm text-slate-300">Window: {timeHorizon}</div>
+                    <div className="rounded-xl bg-white/5 p-3 text-sm text-slate-300">Resolution: Official data source</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="markets" className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+          <div className="mb-8 max-w-3xl">
+            <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Starter markets</div>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Markets designed for debate and opposition</h2>
+            <p className="mt-4 text-slate-400">Each market lets one user propose a forecast and the crowd push back against it through live opposing positions.</p>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {starterMarkets.map((market) => (
+              <div key={market.title} className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="rounded-xl bg-cyan-400/10 px-3 py-2 text-xs text-cyan-200">{market.type}</div>
+                  <div className="text-xs text-slate-400">Horizon: {market.horizon}</div>
+                </div>
+                <h3 className="mt-4 text-xl font-semibold">{market.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-400">{market.question}</p>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-cyan-400/10 p-4">
+                    <div className="text-xs text-cyan-200">FOR</div>
+                    <div className="mt-2 text-2xl font-semibold">{market.yes}%</div>
+                  </div>
+                  <div className="rounded-2xl bg-rose-400/10 p-4">
+                    <div className="text-xs text-rose-200">AGAINST</div>
+                    <div className="mt-2 text-2xl font-semibold">{market.no}%</div>
+                  </div>
+                </div>
+                <button className="mt-5 w-full rounded-2xl border border-white/10 bg-white/5 py-3 text-sm font-medium">Open market</button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="disasters" className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Data panels</div>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Top 10 natural disaster categories from last year</h2>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-300">Add real data sources later for live analytics</div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-5">
+              <div className="overflow-hidden rounded-[1.5rem] border border-white/10">
+                <div className="grid grid-cols-[0.7fr_2fr_1.2fr_1fr_1fr] border-b border-white/10 bg-slate-900/80 px-4 py-3 text-xs uppercase tracking-wide text-slate-400">
+                  <div>Rank</div>
+                  <div>Event</div>
+                  <div>Region</div>
+                  <div>Impact</div>
+                  <div>Severity</div>
+                </div>
+                {disasterData.map((item) => (
+                  <div key={item.rank} className="grid grid-cols-[0.7fr_2fr_1.2fr_1fr_1fr] items-center border-b border-white/5 px-4 py-4 text-sm text-slate-300">
+                    <div className="font-semibold text-white">#{item.rank}</div>
+                    <div>{item.event}</div>
+                    <div>{item.region}</div>
+                    <div>{item.impact}</div>
+                    <div>
+                      <div className="rounded-full bg-white/10 px-3 py-1 text-center text-xs text-white">{item.severity}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <div className="mb-4 flex items-center gap-2 text-sm text-slate-300"><BarChart3 className="h-4 w-4" /> Relative severity chart</div>
+                <MiniBars values={disasterData.map((d) => d.severity)} />
+              </div>
+              <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                <div className="mb-4 flex items-center gap-2 text-sm text-slate-300"><AlertTriangle className="h-4 w-4" /> Why this matters</div>
+                <p className="text-sm leading-7 text-slate-400">These panels give context for why users may open forecast markets in certain regions. They also make the site feel more like a serious global risk dashboard than a simple betting page.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="climate" className="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+          <div className="mb-8 max-w-3xl">
+            <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Climate change context</div>
+            <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Panels that explain the backdrop behind market conviction</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {climateSignals.map((item) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400/20 to-indigo-400/20">
+                    <Icon className="h-5 w-5 text-cyan-200" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold">{item.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-slate-400">{item.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section id="patterns" className="mx-auto max-w-7xl px-6 py-10 pb-24 lg:px-8">
+          <div className="mb-8 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="text-sm uppercase tracking-[0.2em] text-cyan-300">Historical patterns</div>
+              <h2 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Weather patterns from previous years</h2>
+            </div>
+            <div className="text-sm text-slate-400">Use these panels to compare how risk themes evolve across multiple years.</div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="mb-5 flex items-center gap-2 text-sm text-slate-300"><LineChart className="h-4 w-4" /> Multi-year trend view</div>
+              <div className="space-y-5">
+                <PatternRow label="Heat intensity" value={79} />
+                <PatternRow label="Rainfall extremes" value={72} />
+                <PatternRow label="Wildfire pressure" value={68} />
+                <PatternRow label="Storm volatility" value={76} />
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+              <div className="mb-4 flex items-center gap-2 text-sm text-slate-300"><Zap className="h-4 w-4" /> Year-by-year comparison</div>
+              <div className="space-y-4">
+                {yearlyPatterns.map((row) => (
+                  <div key={row.year} className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+                    <div className="mb-3 text-sm font-medium text-white">{row.year}</div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <PatternRow label="Heat" value={row.heat} />
+                      <PatternRow label="Rainfall" value={row.rainfall} />
+                      <PatternRow label="Wildfire" value={row.wildfire} />
+                      <PatternRow label="Storm" value={row.storm} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
